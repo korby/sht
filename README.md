@@ -1,0 +1,4 @@
+sht
+===
+
+Ssh shortcuts
