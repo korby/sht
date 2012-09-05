@@ -3,7 +3,7 @@ path=`pwd`
 confFile=$HOME/sht/sht
 function loadCmd {
 	idConn=$1
-	confLine=`cat $confFile | grep $idConn`;l
+	confLine=`cat $confFile | grep $idConn`;
 	shCmd=`echo $confLine | cut -d":" -f2`
 	ssh $shCmd;
 }
