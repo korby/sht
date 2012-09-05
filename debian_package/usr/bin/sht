@@ -1,0 +1,33 @@
+#!/bin/bash
+path=`pwd`
+confFile=$HOME/sht/sht
+function loadCmd {
+	idConn=$1
+	confLine=`cat $confFile | grep $idConn`;l
+	shCmd=`echo $confLine | cut -d":" -f2`
+	ssh $shCmd;
+}
+
+
+
+while getopts lf: opt
+do
+    case "$opt" in
+      l)  cat $confFile; exit 1; ;;
+      \?)		# unknown flag
+      	  echo >&2 \
+	  "usage: $0 id de la connexion à lancer"
+	  exit 1;;
+    esac
+done
+
+if test -z "$*" 
+then
+     cat $confFile;
+else
+     loadCmd $1
+fi
+
+
+
+

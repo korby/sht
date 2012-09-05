@@ -1,0 +1,3 @@
+#!/bin/bash
+rm /usr/bin/sht
+rm /etc/bash_completion.d/sht

@@ -1,0 +1,13 @@
+#sht completion
+_sht ()
+{
+  local cur keywords
+
+  COMPREPLY=()
+  cur=${COMP_WORDS[COMP_CWORD]}
+  keywords=`cat $HOME/sht/sht | cut -d":" -f1`
+  COMPREPLY=( $(compgen -W "$keywords" -- $cur ) )
+
+  return 0
+}
+complete -F _sht sht
