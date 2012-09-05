@@ -10,13 +10,14 @@ function loadCmd {
 
 
 
-while getopts lf: opt
+while getopts lhf: opt
 do
     case "$opt" in
       l)  cat $confFile; exit 1; ;;
+      h)  echo "usage: $0 shortcut to launch, before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost" ; exit 1; ;;
       \?)		# unknown flag
       	  echo >&2 \
-	  "usage: $0 id de la connexion à lancer"
+	  "usage: $0 shortcut to launch, before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost"
 	  exit 1;;
     esac
 done
