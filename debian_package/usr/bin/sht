@@ -7,14 +7,33 @@ function loadCmd {
 	shCmd=`echo $confLine | cut -d":" -f2`
 	ssh $shCmd;
 }
+function addCmd {
+    if test -z "$1"
+        then
+             echo "first argument (shortcut's name) missing";
+             exit 1;
+    fi
+    if test -z "$2"
+        then
+             echo "second argument (shortcut's command) missing";
+             exit 1;
+        else
+             echo $1":"$2 >> $confFile;
+             echo $1" added to the shortcuts' file";
+    fi
 
+}
 
-
-while getopts lhf: opt
+while getopts clhf: opt
 do
     case "$opt" in
       l)  cat $confFile; exit 1; ;;
-      h)  echo "usage: $0 shortcut to launch, before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost" ; exit 1; ;;
+      c)  addCmd $2 $3; exit 1; ;;
+      h)  echo "usage: -h | -c | -l" ;
+          echo "usage: $0 [shortcut to launch] : before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost" ;
+          echo "usage: $0 -c [name] [user@host] : add the shortcut in the shortcuts' file" ;
+          echo " -h : print help" ;
+          exit 1; ;;
       \?)		# unknown flag
       	  echo >&2 \
 	  "usage: $0 shortcut to launch, before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost"
