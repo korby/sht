@@ -19,7 +19,7 @@ function addCmd {
              exit 1;
         else
              if [[ "$2" =~ "@" ]] ; then
-                 if grep $1":"$2 $confFile > /dev/null
+                 if grep $1":" $confFile > /dev/null
                     then
                     echo "Shortcut $1 already exists";
                     exit 1;
