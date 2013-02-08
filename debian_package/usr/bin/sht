@@ -19,10 +19,16 @@ function addCmd {
              exit 1;
         else
              if [[ "$2" =~ "@" ]] ; then
-                 echo $1":"$2 >> $confFile;
-                 echo $1" added to the shortcuts' file";
+                 if grep $1":"$2 $confFile > /dev/null
+                    then
+                    echo "Shortcut $1 already exists";
+                    exit 1;
                  else
-                 echo "second argument (shortcut's command) incorrect";
+                    echo $1":"$2 >> $confFile;
+                    echo $1" added to the shortcuts' file";
+                 fi
+             else
+                 echo "second argument (shortcut's command) is incorrect";
              fi
     fi
 
