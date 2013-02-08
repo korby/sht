@@ -18,8 +18,12 @@ function addCmd {
              echo "second argument (shortcut's command) missing";
              exit 1;
         else
-             echo $1":"$2 >> $confFile;
-             echo $1" added to the shortcuts' file";
+             if [[ "$2" =~ "@" ]] ; then
+                 echo $1":"$2 >> $confFile;
+                 echo $1" added to the shortcuts' file";
+                 else
+                 echo "second argument (shortcut's command) incorrect";
+             fi
     fi
 
 }
