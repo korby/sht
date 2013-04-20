@@ -37,7 +37,7 @@ function addCmd {
 while getopts clhf: opt
 do
     case "$opt" in
-      l)  cat $confFile; exit 1; ;;
+      l)  cat $confFile | sort -k1n,1n; exit 1; ;;
       c)  addCmd $2 $3; exit 1; ;;
       h)  echo "usage: -h | -c | -l" ;
           echo "usage: $0 [shortcut to launch] : before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost" ;
@@ -53,7 +53,7 @@ done
 
 if test -z "$*" 
 then
-     cat $confFile;
+     cat $confFile | sort -k1n,1n;
 else
      loadCmd $1
 fi
