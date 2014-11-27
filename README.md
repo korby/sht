@@ -5,8 +5,10 @@ Ssh shortcuts
 The easy way to launch ssh access without wondering username, ip adress...
 
 # install
+```
 git clone git@github.com:korby/sht.git
 dpkg -i sht.deb
+```
 
 # usage
 options : -h | -c | -l | -i
