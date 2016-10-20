@@ -1,14 +1,19 @@
 #!/bin/bash
 path=`pwd`
 confFile=$HOME/sht/sht
+
+function getRemoteConChain {
+  idConn=$1
+  confLine=`cat $confFile | grep $idConn:`;
+  echo $confLine | cut -d":" -f2
+}
+function copyId {
+  shCmd=`getRemoteConChain $1`
+  ssh-copy-id $shCmd
+}
 function loadCmd {
-	idConn=$1
-	confLine=`cat $confFile | grep $idConn:`;
-	shCmd=`echo $confLine | cut -d":" -f2`
-	if [[ "$2" = "i" ]] ; then
-	    ssh-copy-id $shCmd
-	fi
-	ssh $shCmd;
+	shCmd=`getRemoteConChain $1`
+	ssh $shCmd ${@:2};
 }
 function addCmd {
     if test -z "$1"
@@ -45,7 +50,7 @@ do
     case "$opt" in
       l)  cat $confFile | sort -k1n,1n; exit 1; ;;
       c)  addCmd $2 $3; exit 1; ;;
-      i)  loadCmd $2 "i"; exit 1; ;;
+      i)  copyId $2; loadCmd $2; exit 1; ;;
       d)  displayCmd $2; exit 1; ;;
       h)  echo "usage: -h | -c | -l | -i" ;
           echo "usage: $0 [shortcut to launch] : before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost" ;
@@ -65,7 +70,7 @@ if test -z "$*"
 then
      cat $confFile | sort -k1n,1n;
 else
-     loadCmd $1
+     loadCmd $1 ${@:2}
 fi
 
 
