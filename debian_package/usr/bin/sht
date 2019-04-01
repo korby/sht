@@ -36,7 +36,7 @@ function addCmd {
                     echo "Shortcut $1 already exists";
                     exit 1;
                  else
-                    echo $1":"$2 >> $confFile;
+                    echo $1":"$2" "$3" "$4 >> $confFile;
                     echo $1" added to the shortcuts' file";
                  fi
              else
@@ -53,7 +53,7 @@ while getopts clhfide: opt
 do
     case "$opt" in
       l)  cat $confFile | sort -k1n,1n; exit 1; ;;
-      c)  addCmd $2 $3; exit 1; ;;
+      c)  addCmd $2 $3 $4 $5; exit 1; ;;
       e)  execCmd $2 ${@:2}; exit 1; ;;
       i)  copyId $2; loadCmd $2; exit 1; ;;
       d)  displayCmd $2; exit 1; ;;
@@ -72,7 +72,7 @@ do
     esac
 done
 
-if test -z "$*" 
+if test -z "$*"
 then
      cat $confFile | sort -k1n,1n;
 else
