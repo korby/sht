@@ -1,12 +1,86 @@
 #sht completion
+_sht_arg_is_serverco ()
+{
+    term=$1
+    if [ "$(grep $1":" $HOME/sht/sht)" != "" ]; then echo "yes"; else echo "no"; fi
+}
 _sht ()
 {
   local cur keywords
+  IFS_BAK=$IFS
   COMPREPLY=()
   cur=${COMP_WORDS[COMP_CWORD]}
-  keywords=`cat $HOME/sht/sht | cut -d":" -f1`
-  COMPREPLY=( $(compgen -W "$keywords" -- $cur ) )
+  remote_complete_first_arg_detect="2"
+  remote_complete_first_arg_word_index="1"
+  remote_complete_second_arg_detect="3"
+  remote_complete_second_arg_word_index="2"
 
-  return 0
+  # commande name + space + first arg = 3
+  if [[ "${#COMP_WORDS[@]}" == "$remote_complete_first_arg_detect" ]];
+  # first arg is at index 1
+  then
+    remote_complete="yes"
+    remote_word_index=$remote_complete_first_arg_word_index
+  fi
+  # commande name + space + first arg = 3
+  if [[ "${#COMP_WORDS[@]}" == "$remote_complete_second_arg_detect" ]];
+  # first arg is at index 1
+  then
+    remote_complete="yes"
+    remote_word_index=$remote_complete_second_arg_word_index
+  fi
+    if [ "$remote_complete" == "yes" ];
+    then
+        #echo "word:"${COMP_WORDS[$remote_word_index]} >> /tmp/debug.log
+        server_alias=`echo ${COMP_WORDS[$remote_word_index]} | cut -d":" -f1`
+        path=`echo ${COMP_WORDS[$remote_word_index]} | cut -d":" -f2 `
+        if [ "$(_sht_arg_is_serverco $server_alias)" == "yes" ] && [[ "${COMP_WORDS[$remote_word_index]}" =~ : ]];
+        then
+            server_conn=$(grep $server_alias":" $HOME/sht/sht |cut -d":" -f2)
+
+            if [[ "$path" =~ / ]]; then
+                path_lastdir=$(echo $path | sed -E "s|(.*\/)[^/]*|\1|")
+                pattern=$(echo $path | sed -E "s|.*\/([^/]*$)|\1|")
+                res=$(ssh $server_conn"find $path_lastdir -maxdepth 1 -name '$pattern*'")
+
+                # because returned value is a list
+                IFS=$'\n'
+                for item in ${res[@]}
+                do
+                    if [[ "$item" =~ " " ]]; then
+                      # todo : handle with space in file name
+                      item_clean="'"${item// /\\}"'"
+                    else
+                      item_clean=$item
+                    fi
+                    keywords=$item_clean" "$keywords
+
+                done
+            else
+                keywords=$(ssh $server_conn "ls -1 -p")
+               
+            fi
+
+          gen_res=( $(compgen -W "$keywords" -- $path ) )
+          tot_entry=$(echo "$gen_res" | tr -cd ' ' | wc -c)
+          IFS=$IFS_BAK
+          if [ $tot_entry -eq 1 ] && [[ ! $(compgen -W "$keywords" -- $path ) =~ /$ ]];
+          then
+            add="/"
+          fi
+          COMPREPLY=( $(compgen -W "$keywords" -- $path )$add )
+          return 0;
+        fi
+    else
+
+           echo "num:""${#COMP_WORDS[@]}" >> /tmp/debug.log
+           echo "word2:""${COMP_WORDS[1]}" >> /tmp/debug.log
+    fi
+    #echo "word:"${COMP_WORDS[1]} >> /tmp/debug.log
+    echo "num:""${#COMP_WORDS[@]}" >> /tmp/debug.log
+    keywords=`cat $HOME/sht/sht | cut -d":" -f1`
+    COMPREPLY=( $(compgen -W "$keywords" -- $cur ) )
+ 
 }
-complete -F _sht sht
+#complete -o nospace -F _sht sht
+complete -o nospace -o filenames -o bashdefault -o default -F _sht sht

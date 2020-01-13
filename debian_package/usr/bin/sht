@@ -13,8 +13,35 @@ function copyId {
   ssh-copy-id $shCmd
 }
 function loadCmd {
-  shCmd=`getRemoteConChain $1`
-  ssh $shCmd ${@:2};
+  firstArg=$1
+  secondArg=$2
+  shCmd=`getRemoteConChain $firstArg`
+  if [[ "$firstArg" =~ : ]];
+  then
+    copy="yes"
+    serverAlias=$(echo $firstArg |cut -d":" -f1)
+    shCmd=`getRemoteConChain $serverAlias`
+    shCmd=${firstArg/$serverAlias/$shCmd}
+    shCmd=$shCmd" $secondArg"
+  fi
+  if [[ "$secondArg" =~ : ]];
+  then
+    copy="yes"
+    serverAlias=$(echo $secondArg |cut -d":" -f1)
+    shCmd=`getRemoteConChain $serverAlias`
+    shCmd=${secondArg/$serverAlias/$shCmd}
+    shCmd="$firstArg "$shCmd
+  fi
+  if [ "$copy" == "yes" ];
+  then
+    read -p "Want to execute : scp -r $shCmd ? [N,y]" resp
+    case "$resp" in [yY]) echo "Ok copying...";; *) echo "Do nothing..."; exit 1;; esac
+    scp -r $shCmd
+    
+  else
+    ssh $shCmd ${@:2};
+  fi
+  
 }
 function execCmd {
   shCmd=`getRemoteConChain $1`
@@ -59,7 +86,7 @@ do
       e)  execCmd $2 ${@:2}; exit 1; ;;
       i)  copyId $2; loadCmd $2; exit 1; ;;
       d)  displayCmd $2; exit 1; ;;
-      h)  echo "usage: -h | -c | -l | -i" ;
+      h)  echo "usage: -h | -c | -l | -i | -d" ;
           echo "usage: $0 [shortcut to launch] : before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost" ;
           echo "usage: $0 -d [term to search] : display shortcuts matching with term" ;
           echo "usage: $0 -c [name] [user@host] : add the shortcut in the shortcuts' file" ;
