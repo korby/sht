@@ -22,8 +22,10 @@ sht [shortcut to launch]
 
 # Will add the shortcut prodserver2
 sht -c prodserver2 user@prod.domain
+
 # Will connect you to user@prod.domain
 sht prodserver2
+
 # Will copy remote private_file on local /tmp/private_file asking you if you want to use remote sudo
 sht prodserver2:/root/private_file /tmp/private_file
 ```
