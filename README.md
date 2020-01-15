@@ -4,6 +4,8 @@ sht
 Ssh shortcuts
 The easy way to launch ssh access without wondering username, ip adress...
 Features :
+- connect to remote host
+- copy id to remote user authorized_keys' file
 - remote autocompletion
 - rsync copying between local and remote
 - rsync copying with remote sudo
