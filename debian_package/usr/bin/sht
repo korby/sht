@@ -22,6 +22,8 @@ function loadCmd {
     serverAlias=$(echo $firstArg |cut -d":" -f1)
     shCmd=`getRemoteConChain $serverAlias`
     shCmd=${firstArg/$serverAlias/$shCmd}
+    # invert -p string position
+    shCmd=$(echo $shCmd | sed "s/\(.*\) \(-p .*\)\(:.*\)/\2 \1\3/" |sed "s/-p/-P/")
     shCmd=$shCmd" $secondArg"
   fi
   if [[ "$secondArg" =~ : ]];
@@ -30,6 +32,8 @@ function loadCmd {
     serverAlias=$(echo $secondArg |cut -d":" -f1)
     shCmd=`getRemoteConChain $serverAlias`
     shCmd=${secondArg/$serverAlias/$shCmd}
+    # invert -p string position
+    shCmd=$(echo $shCmd | sed "s/\(.*\) \(-p .*\)\(:.*\)/\2 \1\3/" |sed "s/-p/-P/")
     shCmd="$firstArg "$shCmd
   fi
   if [ "$copy" == "yes" ];
