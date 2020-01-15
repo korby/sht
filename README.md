@@ -19,6 +19,9 @@ options : -h | -c | -l | -i | -d
 
 ```
 sht [shortcut to launch]
+sht -c prodserver2 user@prod.domain -> will add the shortcut prodserver2
+sht prodserver2 -> will connect you to user@prod.domain
+sht prodserver2:/root/private_file /tmp/private_file -> will copy remote private_file on local /tmp/private_file asking you if you want to use remote sudo
 ```
 before you have to fill/create you shortcuts file here: /Users/andre/sht/sht With this syntax for each line : shortcutsName:sshuser@sshhost
 ```
