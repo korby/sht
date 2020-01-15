@@ -38,9 +38,15 @@ function loadCmd {
   fi
   if [ "$copy" == "yes" ];
   then
-    read -p "Want to execute : scp -r $shCmd ? [N,y]" resp
+    #shCmd is formatted for scp syntax
+    # now format for rsync : rsync "ssh -i"...
+    shCmd=$(echo $shCmd | sed "s/-i \([^ ]*\)\( .*\)/-e 'ssh -i \1'\2/")
+    read -p "Want to execute : rsync -rv $shCmd ? [N,y]" resp
     case "$resp" in [yY]) echo "Ok copying...";; *) echo "Do nothing..."; exit 1;; esac
-    scp -r $shCmd
+    read -p "Want to copy via remote sudo [N,y]" resp
+    case "$resp" in [yY]) eval "rsync -rv --rsync-path='sudo rsync' $shCmd";; *) eval "rsync -rv $shCmd";; esac
+    #rsync -rv --rsync-path="sudo rsync" $shCmd
+    #scp -r $shCmd
     
   else
     ssh $shCmd ${@:2};

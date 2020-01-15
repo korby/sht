@@ -41,7 +41,11 @@ _sht ()
             if [[ "$path" =~ / ]]; then
                 path_lastdir=$(echo $path | sed -E "s|(.*\/)[^/]*|\1|")
                 pattern=$(echo $path | sed -E "s|.*\/([^/]*$)|\1|")
-                res=$(ssh $server_conn"find $path_lastdir -maxdepth 1 -name '$pattern*'")
+                res=$(ssh $server_conn"find $path_lastdir -maxdepth 1 -name '$pattern*'" 2>&1)
+                if [[ "$res" =~ denied ]];
+                then
+                  res=$(ssh $server_conn"sudo find $path_lastdir -maxdepth 1 -name '$pattern*'")
+                fi
 
                 # because returned value is a list
                 IFS=$'\n'
