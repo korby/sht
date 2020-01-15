@@ -15,7 +15,6 @@ dpkg -i sht.deb
 ```
 
 # usage
-options : -h | -c | -l | -i | -d
 
 ```
 sht [shortcut to launch]
@@ -30,7 +29,7 @@ sht prodserver2
 sht prodserver2:/root/private_file /tmp/private_file
 ```
 
-Options details
+Options details: -h | -c | -l | -i | -d
 ```
 sht -c [name] [user@host] : add the shortcut in the shortcuts' file
 sht -d [term to search] : display shortcuts matching with term
