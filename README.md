@@ -17,7 +17,7 @@ Features :
 git clone git@github.com:korby/sht.git
 dpkg -i sht.deb
 ```
-## Macos
+## Macosx
 Autocompletion is very useful, if this command doesn't exist :
 ```
 complete
