@@ -12,9 +12,27 @@ Features :
 - rsync copying with remote sudo
 
 # install
+## Debian like systems
 ```
 git clone git@github.com:korby/sht.git
 dpkg -i sht.deb
+```
+## Macos
+Autocompletion is very useful, if this command doesn't exist :
+```
+complete
+```
+Then install bash completion :
+```
+brew install bash-completion
+```
+And now install sht :
+```
+git clone git@github.com:korby/sht.git
+cp sht/debian_package/usr/bin/sht /usr/local/bin/
+chmod +x /usr/local/bin/sht
+cp sht/debian_package/etc/bash_completion.d/sht /usr/local/etc/bash_completion.d/sht
+. /usr/local/etc/bash_completion.d/sht
 ```
 
 # usage

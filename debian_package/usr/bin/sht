@@ -3,6 +3,8 @@ path=`pwd`
 confFile=$HOME/sht/sht
 terminal_allocation=""
 
+if [ ! -d "$HOME/sht/" ]; then mkdir $HOME/sht/; fi
+
 function getRemoteConChain {
   idConn=$1
   confLine=`cat $confFile | grep $idConn:`;
