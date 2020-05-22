@@ -38,22 +38,38 @@ cp sht/debian_package/etc/bash_completion.d/sht /usr/local/etc/bash_completion.d
 # usage
 
 ```
-sht [shortcut to launch]
+sht [options] [local_path] shortcut [local_path|ssh_connection_chain]
 
-# Will add the shortcut prodserver2
-sht -c prodserver2 user@prod.domain
+Use shortcut to make remote ssh connections.
 
-# Will connect you to user@prod.domain
-sht prodserver2
+Examples :
 
-# Will copy remote private_file on local /tmp/private_file asking you if you want to use remote sudo
-sht prodserver2:/root/private_file /tmp/private_file
-```
+sht -c my-server me@domain.tld
+Add a shorcut named 'my-server'. Then you can connect to me@domain.tld just typing sht my-server.
 
-Options details: -h | -c | -l | -i | -d
-```
-sht -c [name] [user@host] : add the shortcut in the shortcuts' file
-sht -d [term to search] : display shortcuts matching with term
-sht -i [shortcut to launch] : launch the shortcut and ssh copy id
-sht -h : print help
+sht -i my-server
+Copy your id_rsa.pub to remote shortcut 'my-server'.
+
+sht /path/to/file my-server:/path/to/file
+Copy local file /path/to/file to remote shortcut 'my-server' /path/to/file.
+
+sht my-server:/path/to/file /path/to/file
+Copy remote shortcut 'my-server' file /path/to/file to local path /path/to/file.
+
+sht -s my-server:/path/to/file /path/to/file
+The same than above but using sudo on the remote server.
+
+Options :
+  -c : Create a new shortcut
+  -d : Display the ssh_connection_chain set for a shortcut
+  -h : Display help
+  -i : Copy identity file to remote shortcut
+  -l : List all shortcuts informations
+  -s : Use sudo on remote server for copying
+  -t : Allow remote server terminal allocation
+
+Advanced usage :
+When you add a new shortcut you can give complex ssh chain, examples :
+sht -c my-shortcut-name -i /path/to/a/key/rsa  -p 8222 user@xx.xxx.xx.xxx
+sht -c my-shortcut-name -J user@xx.xxx.xx.xxx -i /path/to/a/key/rsa  -p 8222 user@xx.xxx.xx.xxx
 ```
