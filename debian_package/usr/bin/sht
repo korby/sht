@@ -137,8 +137,8 @@ function create() {
 }
 
 function copy_id() {
-  shCmd=$(getRemoteConChain $1)
-  ssh-copy-id $shCmd
+  ssh_command=$(get_remote_conn_chain $1)
+  ssh-copy-id $ssh_command
 }
 
 function list() {
