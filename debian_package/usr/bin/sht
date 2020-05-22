@@ -147,13 +147,13 @@ function list() {
 
 function main() {
   if ((opt_s)); then remote_sudo="sudo "; fi
+  if ((opt_h)); then help; exit 0; fi
   if [ "$1" == "" ]; then
     list
     exit 1
   fi
   if ((opt_t)); then terminal_allocation="-t "; fi
   if !((option_total)) || ((opt_t)) || ((opt_s)); then connect ${@:1}; fi
-  if ((opt_h)); then help; fi
   if ((opt_c)); then create ${@:1}; fi
   if ((opt_d)); then
     build_ssh_command ${@:1}
