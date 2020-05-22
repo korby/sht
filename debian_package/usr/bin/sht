@@ -1,121 +1,166 @@
 #!/bin/bash
-path=`pwd`
-confFile=$HOME/sht/sht
+path=$(pwd)
+conf_file=$HOME/sht/sht
 terminal_allocation=""
 
-if [ ! -d "$HOME/sht/" ]; then mkdir $HOME/sht/; fi
+while getopts acdhilst opt; do
+  # Make a boolean var for each given option
+  if [ "$opt" != "?" ]; then eval opt_"$opt"=1; fi
+  ((option_total++))
+  case "$opt" in
+  \?) exit 1 ;; # if option is illegal, we stop the process
+  esac
 
-function getRemoteConChain {
-  idConn=$1
-  confLine=`cat $confFile | grep $idConn:`;
-  echo $confLine | cut -d":" -f2
+done
+shift $(($OPTIND - 1))
+
+function help() {
+  echo -e "\nUsage: $(basename "$0") [options] [local_path] shortcut [local_path|ssh_connection_chain]"
+  echo -e "\nUse shortcut to make remote ssh connections."
+  echo -e "\nExamples :"
+  echo -e "\n$(basename "$0") -c my-server me@domain.tld"
+  echo -e "Add a shorcut named 'my-server'. Then you can connect to me@domain.tld just typing $(basename "$0") my-server."
+  echo -e "\n$(basename "$0") -i my-server"
+  echo -e "Copy your id_rsa.pub to remote shortcut 'my-server'."
+  echo -e "\n$(basename "$0") /path/to/file my-server:/path/to/file"
+  echo -e "Copy local file /path/to/file to remote shortcut 'my-server' /path/to/file."
+  echo -e "\n$(basename "$0") my-server:/path/to/file /path/to/file"
+  echo -e "Copy remote shortcut 'my-server' file /path/to/file to local path /path/to/file."
+  echo -e "\n$(basename "$0") -s my-server:/path/to/file /path/to/file"
+  echo -e "The same than above but using sudo on the remote server."
+  echo -e "\nOptions : "
+  echo "  -c : Create a new shortcut"
+  echo "  -d : Display the ssh_connection_chain set for a shortcut"
+  echo "  -h : Display help"
+  echo "  -i : Copy identity file to remote shortcut"
+  echo "  -l : List all shortcuts informations"
+  echo "  -s : Use sudo on remote server for copying"
+  echo "  -t : Allow remote server terminal allocation"
+  echo -e "\nAdvanced usage : "
+  echo "When you add a new shortcut you can give complex ssh chain, examples :"
+  echo "$(basename "$0") -c my-shortcut-name -i /path/to/a/key/rsa  -p 8222 user@xx.xxx.xx.xxx"
+  echo "$(basename "$0") -c my-shortcut-name -J user@xx.xxx.xx.xxx -i /path/to/a/key/rsa  -p 8222 user@xx.xxx.xx.xxx"
 }
-function copyId {
-  shCmd=`getRemoteConChain $1`
+
+function get_remote_conn_chain() {
+  id_conn=$1
+  conf_line=$(cat $conf_file | grep $id_conn:)
+  echo $conf_line | cut -d":" -f2-
+}
+
+function build_ssh_command() {
+  conn_chain=$(get_remote_conn_chain $1)
+  if [ "$conn_chain" == "" ]; then
+    echo "No shortcut found."
+    exit 1
+  fi
+  ssh_command="ssh $terminal_allocation""$conn_chain ${@:2}"
+}
+
+function build_ssh_command_for_copy() {
+  direction=$3
+  server_alias=$(echo $1 | cut -d":" -f1)
+  conn_chain=$(get_remote_conn_chain $server_alias)
+  if [ "$conn_chain" == "" ]; then
+    echo "No shortcut found."
+    exit 1
+  fi
+  conn_chain=${1/$server_alias/$conn_chain}
+
+  server_co=${conn_chain##* }
+  ssh_args=${conn_chain/$server_co/}
+
+  if [ "$direction" == "remote2local" ]; then
+    rsync_command="rsync -rv --rsync-path='$remote_sudo""rsync' -e 'ssh $terminal_allocation""$ssh_args' $server_co $2"
+  fi
+  if [ "$direction" == "local2remote" ]; then
+    rsync_command="rsync -rv --rsync-path='$remote_sudo""rsync' -e 'ssh $terminal_allocation""$ssh_args' $2 $server_co"
+    echo "Do you want to execute that copy command :"
+    echo "$rsync_command"
+    read -p "Yes or no ? [N,y]" resp
+    case "$resp" in [yY]) echo "Ok copying..." ;; *)
+      echo "Do nothing..."
+      exit 1
+      ;;
+    esac
+  fi
+  #echo $conn_chain
+  #echo $server_co
+  #echo $ssh_args
+  #echo $rsync_command
+
+  ssh_command=$rsync_command
+}
+
+function connect() {
+  # if first argument is a path, action expected is a copy from remote to local
+  if [[ "$1" =~ : ]]; then
+    if [ "$2" == "" ]; then
+      echo "Il manque le chemin de destination de la copie."
+      exit 1
+    fi
+    build_ssh_command_for_copy $1 $2 "remote2local"
+  fi
+  # if second argument is a path, action expected is a copy from local to remote
+  if [[ "$2" =~ : ]]; then
+    build_ssh_command_for_copy $2 $1 "local2remote"
+  fi
+  if [ "$ssh_command" == "" ]; then
+    build_ssh_command ${@:1}
+  fi
+  #echo  $ssh_command
+  eval $ssh_command
+
+}
+
+function create() {
+  if test -z "$1"; then
+    echo "first argument (shortcut's name) missing"
+    exit 1
+  fi
+  if test -z "$2"; then
+    echo "second argument (shortcut's connection chain) missing"
+    exit 1
+  fi
+  if [[ "${@:2}" =~ "@" ]]; then
+    if grep $1":" $conf_file >/dev/null; then
+      echo "Shortcut $1 already exists"
+      exit 1
+    else
+      echo $1":"${@:2} >>$conf_file
+      echo $1" added to the shortcuts' file"
+    fi
+  else
+    echo "second argument (shortcut's connection chain) is incorrect, missing @"
+  fi
+
+}
+
+function copy_id() {
+  shCmd=$(getRemoteConChain $1)
   ssh-copy-id $shCmd
 }
-function loadCmd {
-  firstArg=$1
-  secondArg=$2
-  shCmd=`getRemoteConChain $firstArg`
-  if [[ "$firstArg" =~ : ]];
-  then
-    copy="yes"
-    serverAlias=$(echo $firstArg |cut -d":" -f1)
-    shCmd=`getRemoteConChain $serverAlias`
-    shCmd=${firstArg/$serverAlias/$shCmd}
-    # invert -p string position
-    shCmd=$(echo $shCmd | sed "s/\(.*\) \(-p .*\)\(:.*\)/\2 \1\3/" |sed "s/-p/-P/")
-    shCmd=$shCmd" $secondArg"
-  fi
-  if [[ "$secondArg" =~ : ]];
-  then
-    copy="yes"
-    serverAlias=$(echo $secondArg |cut -d":" -f1)
-    shCmd=`getRemoteConChain $serverAlias`
-    shCmd=${secondArg/$serverAlias/$shCmd}
-    # invert -p string position
-    shCmd=$(echo $shCmd | sed "s/\(.*\) \(-p .*\)\(:.*\)/\2 \1\3/" |sed "s/-p/-P/")
-    shCmd="$firstArg "$shCmd
-  fi
-  if [ "$copy" == "yes" ];
-  then
-    #shCmd is formatted for scp syntax
-    # now format for rsync : rsync "ssh -i"...
-    shCmd=$(echo $shCmd | sed "s/-i \([^ ]*\)\( .*\)/-e 'ssh -i \1'\2/")
-    read -p "Want to execute : rsync -rv $shCmd ? [N,y]" resp
-    case "$resp" in [yY]) echo "Ok copying...";; *) echo "Do nothing..."; exit 1;; esac
-    read -p "Want to copy via remote sudo [N,y]" resp
-    case "$resp" in [yY]) eval "rsync -rv --rsync-path='sudo rsync' $shCmd";; *) eval "rsync -rv $shCmd";; esac
-    #rsync -rv --rsync-path="sudo rsync" $shCmd
-    #scp -r $shCmd
-    
-  else
-    ssh $shCmd ${@:2};
-  fi
-  
-}
-function execCmd {
-  shCmd=`getRemoteConChain $1`
-  ssh $terminal_allocation$shCmd "${@:3}"
-}
-function addCmd {
-    if test -z "$1"
-        then
-             echo "first argument (shortcut's name) missing";
-             exit 1;
-    fi
-    if test -z "$2"
-        then
-             echo "second argument (shortcut's command) missing";
-             exit 1;
-        else
-             if [[ "$2" =~ "@" ]] ; then
-                 if grep $1":" $confFile > /dev/null
-                    then
-                    echo "Shortcut $1 already exists";
-                    exit 1;
-                 else
-                    echo $1":"$2" "$3" "$4 >> $confFile;
-                    echo $1" added to the shortcuts' file";
-                 fi
-             else
-                 echo "second argument (shortcut's command) is incorrect";
-             fi
-    fi
 
-}
-function displayCmd {
-  cat $confFile | grep $1;
+function list() {
+  cat $conf_file | sort -k1n,1n
 }
 
-while getopts clhfidet: opt
-do
-    case "$opt" in
-      t)  terminal_allocation="-t "; execCmd $2 ${@:2}; exit 1; ;;
-      l)  cat $confFile | sort -k1n,1n; exit 1; ;;
-      c)  addCmd $2 $3 $4 $5; exit 1; ;;
-      e)  execCmd $2 ${@:2}; exit 1; ;;
-      i)  copyId $2; loadCmd $2; exit 1; ;;
-      d)  displayCmd $2; exit 1; ;;
-      h)  echo "usage: -h | -c | -l | -i | -d" ;
-          echo "usage: $0 [shortcut to launch] : before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost" ;
-          echo "usage: $0 -d [term to search] : display shortcuts matching with term" ;
-          echo "usage: $0 -c [name] [user@host] : add the shortcut in the shortcuts' file" ;
-          echo "usage: $0 -i [shortcut to launch] : launch the shortcut and ssh copy id" ;
-          echo "usage: $0 -e [shortcut to launch] [bash command] : execute bash command on remote host" ;
-          echo " -h : print help" ;
-          exit 1; ;;
-      \?)   # unknown flag
-          echo >&2 \
-    "usage: $0 shortcut to launch, before you have to fill/create you shortcuts file here: "$confFile" With this syntax for each line : shortcutsName:sshuser@sshhost"
-    exit 1;;
-    esac
-done
+function main() {
+  if ((opt_s)); then remote_sudo="sudo "; fi
+  if [ "$1" == "" ]; then
+    list
+    exit 1
+  fi
+  if ((opt_t)); then terminal_allocation="-t "; fi
+  if !((option_total)) || ((opt_t)) || ((opt_s)); then connect ${@:1}; fi
+  if ((opt_h)); then help; fi
+  if ((opt_c)); then create ${@:1}; fi
+  if ((opt_d)); then
+    build_ssh_command ${@:1}
+    echo $ssh_command
+  fi
+  if ((opt_i)); then copy_id ${@:1}; fi
 
-if test -z "$*"
-then
-     cat $confFile | sort -k1n,1n;
-else
-     loadCmd $1 ${@:2}
-fi
+}
+
+main ${@:1}
