@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ ! -f $HOME/sht/sht ]; then
-        mkdir $HOME/sht/
+        mkdir -p $HOME/sht/scripts
         echo "mysshortcutname:myuser@myhost" >> $HOME/sht/sht
 		exit;
 fi

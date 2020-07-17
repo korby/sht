@@ -1,0 +1,7 @@
+ub:
+    build: ./
+    ports:
+        - "222:22"
+    volumes:
+      - ~/.ssh/id_rsa:/home/ubuntu/.ssh/id_rsa
+    command: /lib/systemd/systemd

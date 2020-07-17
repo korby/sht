@@ -1,11 +1,18 @@
 #!/bin/bash
 path=$(pwd)
 conf_file=$HOME/sht/sht
+scripts_dir=$HOME/sht/scripts
 terminal_allocation=""
 
-while getopts acdhilst opt; do
+while getopts acdhilsft opt; do
   # Make a boolean var for each given option
-  if [ "$opt" != "?" ]; then eval opt_"$opt"=1; fi
+  if [ "$opt" != "?" ]; then 
+    eval opt_"$opt"=1;
+    if [ "$opt" == "f" ]; then 
+      file_given=$(echo $@ |grep "\-f" |sed -E "s|(.*)-f[ =]([^ =]*)(.*)|\2|")
+      ((option_total++))
+    fi
+  fi
   ((option_total++))
   case "$opt" in
   \?) exit 1 ;; # if option is illegal, we stop the process
@@ -54,7 +61,7 @@ function build_ssh_command() {
     echo "No shortcut found."
     exit 1
   fi
-  ssh_command="ssh $terminal_allocation""$conn_chain ${@:2}"
+  ssh_command="ssh $terminal_allocation""$conn_chain \"${@:2}\""
 }
 
 function build_ssh_command_for_copy() {
@@ -108,7 +115,7 @@ function connect() {
   if [ "$ssh_command" == "" ]; then
     build_ssh_command ${@:1}
   fi
-  #echo  $ssh_command
+  #echo  $ssh_command; exit 1
   eval $ssh_command
 
 }
@@ -153,14 +160,19 @@ function main() {
     exit 1
   fi
   if ((opt_t)); then terminal_allocation="-t "; fi
-  if !((option_total)) || ((opt_t)) || ((opt_s)); then connect ${@:1}; fi
+  if ((opt_f)); then 
+      connect $2 bash -s < $scripts_dir"/"$file_given ${@:2}
+      #bash -s < test.sh
+  fi
+  if !((option_total)) || ((opt_t)) || ((opt_s)); then 
+    connect ${@:1}; 
+  fi
   if ((opt_c)); then create ${@:1}; fi
   if ((opt_d)); then
     build_ssh_command ${@:1}
     echo $ssh_command
   fi
   if ((opt_i)); then copy_id ${@:1}; fi
-
 }
 
 main ${@:1}
