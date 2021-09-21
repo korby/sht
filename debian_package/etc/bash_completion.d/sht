@@ -26,12 +26,6 @@ _sht() {
   remote_complete_first_arg_word_index="1"
   remote_complete_second_arg_detect="3"
   remote_complete_second_arg_word_index="2"
-  # if user is looking for a certificate file, let default bash autocomplete do the job
-  # we are here : sht -f xxx
-  if [[ "$COMP_LINE" =~ "-i" ]] && [ ${#COMP_WORDS[@]} -lt 4 ]; then
-    COMPREPLY=($(compgen -W "" --))
-    return
-  fi
 
   # if user is looking for a script file
   if [[ "$COMP_LINE" =~ "-f" ]] && [ ${#COMP_WORDS[@]} -lt 4 ]; then

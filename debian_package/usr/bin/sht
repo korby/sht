@@ -4,7 +4,7 @@ conf_file=$HOME/sht/sht
 scripts_dir=$HOME/sht/scripts
 terminal_allocation=""
 
-while getopts acdhilsft opt; do
+while getopts acdehilsft opt; do
   # Make a boolean var for each given option
   if [ "$opt" != "?" ]; then 
     eval opt_"$opt"=1;
@@ -38,6 +38,8 @@ function help() {
   echo -e "\nOptions : "
   echo "  -c : Create a new shortcut"
   echo "  -d : Display the ssh_connection_chain set for a shortcut"
+  echo "  -e : Edit the data file"
+  echo "  -f /path/to/file : execute local file on remote shortcut"
   echo "  -h : Display help"
   echo "  -i : Copy identity file to remote shortcut"
   echo "  -l : List all shortcuts informations"
@@ -61,7 +63,12 @@ function build_ssh_command() {
     echo "No shortcut found."
     exit 1
   fi
-  ssh_command="ssh $terminal_allocation""$conn_chain \"${@:2}\""
+  if [[ "${@:2}" != "" ]]; then
+    ssh_command="ssh $terminal_allocation""$conn_chain \"${@:2}\""
+  else
+    ssh_command="ssh $terminal_allocation""$conn_chain"
+  fi
+  
 }
 
 function build_ssh_command_for_copy() {
@@ -79,6 +86,7 @@ function build_ssh_command_for_copy() {
 
   if [ "$direction" == "remote2local" ]; then
     rsync_command="rsync -rv --rsync-path='$remote_sudo""rsync' -e 'ssh $terminal_allocation""$ssh_args' $server_co $2"
+    echo "$rsync_command"
   fi
   if [ "$direction" == "local2remote" ]; then
     rsync_command="rsync -rv --rsync-path='$remote_sudo""rsync' -e 'ssh $terminal_allocation""$ssh_args' $2 $server_co"
@@ -145,7 +153,7 @@ function create() {
 
 function copy_id() {
   ssh_command=$(get_remote_conn_chain $1)
-  ssh-copy-id $ssh_command
+  eval ssh-copy-id $ssh_command
 }
 
 function list() {
@@ -153,6 +161,7 @@ function list() {
 }
 
 function main() {
+  if ((opt_e)); then vi ~/sht/sht; fi
   if ((opt_s)); then remote_sudo="sudo "; fi
   if ((opt_h)); then help; exit 0; fi
   if [ "$1" == "" ]; then
