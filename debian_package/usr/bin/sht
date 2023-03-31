@@ -4,7 +4,7 @@ conf_file=$HOME/sht/sht
 scripts_dir=$HOME/sht/scripts
 terminal_allocation=""
 
-while getopts acdehilsft opt; do
+while getopts acdehilsfty opt; do
   # Make a boolean var for each given option
   if [ "$opt" != "?" ]; then 
     eval opt_"$opt"=1;
@@ -90,14 +90,16 @@ function build_ssh_command_for_copy() {
   fi
   if [ "$direction" == "local2remote" ]; then
     rsync_command="rsync -rv --rsync-path='$remote_sudo""rsync' -e 'ssh $terminal_allocation""$ssh_args' $2 $server_co"
-    echo "Do you want to execute that copy command :"
-    echo "$rsync_command"
-    read -p "Yes or no ? [N,y]" resp
-    case "$resp" in [yY]) echo "Ok copying..." ;; *)
-      echo "Do nothing..."
-      exit 1
-      ;;
-    esac
+    if ! ((accept_all)); then
+      echo "Do you want to execute that copy command :"
+      echo "$rsync_command"
+      read -p "Yes or no ? [N,y]" resp
+      case "$resp" in [yY]) echo "Ok copying..." ;; *)
+        echo "Do nothing..."
+        exit 1
+        ;;
+      esac
+    fi
   fi
   #echo $conn_chain
   #echo $server_co
@@ -163,6 +165,7 @@ function list() {
 function main() {
   if ((opt_e)); then vi ~/sht/sht; fi
   if ((opt_s)); then remote_sudo="sudo "; fi
+  if ((opt_y)); then accept_all=1; fi
   if ((opt_h)); then help; exit 0; fi
   if [ "$1" == "" ]; then
     list
